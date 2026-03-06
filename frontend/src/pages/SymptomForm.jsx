@@ -238,7 +238,7 @@ const SymptomForm = ()=> {
         .btn-primary:hover { background: #7dd3fc; transform: translateY(-1px); }
         .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-        .btn-ghost {
+        .btn-transp {
           width: 100%;
           padding: 0.75rem;
           background: transparent;
@@ -364,7 +364,7 @@ const SymptomForm = ()=> {
                 Analyze {selected.length > 0 ? `(${selected.length} symptoms)` : "Symptoms"} →
               </button>
 
-              <button className="btn-ghost" onClick={() => setStep(1)}>← Back</button>
+              <button className="btn-transp" onClick={() => setStep(1)}>← Back</button>
             </>
           )}
 
