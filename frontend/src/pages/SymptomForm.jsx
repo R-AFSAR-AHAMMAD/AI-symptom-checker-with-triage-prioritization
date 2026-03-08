@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 
 const SYMPTOMS = [
   { icon: "🌡️", label: "Fever" },
@@ -32,10 +33,21 @@ const SymptomForm = ()=> {
     );
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
+const handleSubmit = async () => {
+  try {
+    // send patient data to our backend
+    await axios.post("http://localhost:5000/api/patients", {
+      age: age,
+      gender: gender,
+      symptoms: selected,
+    });
+
     setStep(3);
-  };
+  } catch (error) {
+    console.log("Error:", error.response?.data)
+    console.log("Error saving patient:", error.message);
+  }
+};
 
   const reset = () => {
     setStep(1);

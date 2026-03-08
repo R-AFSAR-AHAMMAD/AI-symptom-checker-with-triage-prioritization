@@ -15,7 +15,6 @@ app.use(express.json());
 
 app.use("/api/patients",patientRoutes);
 
-
 app.get("/", (req, res) => {
   res.json({ message: "Server is running!" });
 });
