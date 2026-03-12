@@ -36,6 +36,7 @@ router.post("/", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 router.get("/", async (req, res) => {
   try {
     const patients = await Patient.find().sort({ urgency: -1, createdAt: 1 });
