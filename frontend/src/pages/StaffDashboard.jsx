@@ -1,63 +1,29 @@
-import { useState } from "react";
-
-// Fake patient data
-const fakePatients = [
-  {
-    id: 1,
-    age: 67,
-    gender: "Male",
-    symptoms: ["Chest Pain", "Shortness of Breath", "Dizziness"],
-    urgency: 5,
-    waitingMins: 5,
-  },
-  {
-    id: 2,
-    age: 34,
-    gender: "Female",
-    symptoms: ["Fever", "Headache", "Chills"],
-    urgency: 3,
-    waitingMins: 20,
-  },
-  {
-    id: 3,
-    age: 12,
-    gender: "Male",
-    symptoms: ["Cough", "Sore Throat"],
-    urgency: 1,
-    waitingMins: 35,
-  },
-  {
-    id: 4,
-    age: 45,
-    gender: "Female",
-    symptoms: ["Vomiting", "Stomach Pain", "Fatigue"],
-    urgency: 4,
-    waitingMins: 10,
-  },
-  {
-    id: 5,
-    age: 28,
-    gender: "Male",
-    symptoms: ["Back Pain", "Joint Pain"],
-    urgency: 2,
-    waitingMins: 45,
-  },
-];
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 // Urgency helper
 const getUrgencyInfo = (level) => {
-  if (level === 5) return { label: "Emergency", color: "#ef4444", bg: "#fef2f2" };
+  if (level === 5)
+    return { label: "Emergency", color: "#ef4444", bg: "#fef2f2" };
   if (level === 4) return { label: "Urgent", color: "#f97316", bg: "#fff7ed" };
-  if (level === 3) return { label: "Moderate", color: "#eab308", bg: "#fefce8" };
+  if (level === 3)
+    return { label: "Moderate", color: "#eab308", bg: "#fefce8" };
   if (level === 2) return { label: "Low", color: "#3b82f6", bg: "#eff6ff" };
   return { label: "Routine", color: "#22c55e", bg: "#f0fdf4" };
 };
 
 const StaffDashboard = () => {
-
   const [filter, setFilter] = useState("all");
+  const [patients, setPatients] = useState([]);
 
-  const sorted = [...fakePatients].sort((a, b) => b.urgency - a.urgency);
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/patients")
+      .then((res) => setPatients(res.data))
+      .catch((err) => console.log(err));
+  }, []);
+
+  const sorted = patients;
 
   const visible =
     filter === "all"
@@ -66,7 +32,6 @@ const StaffDashboard = () => {
 
   return (
     <div className="page">
-
       {/* Styles added here */}
       <style>{`
         .page{
@@ -198,9 +163,21 @@ const StaffDashboard = () => {
       </div>
 
       <div className="statsRow">
-        <StatBox label="Total Patients" value={fakePatients.length} color="#3b82f6" />
-        <StatBox label="Emergencies" value={fakePatients.filter(p => p.urgency === 5).length} color="#ef4444" />
-        <StatBox label="Waiting > 30m" value={fakePatients.filter(p => p.waitingMins > 30).length} color="#f97316" />
+        <StatBox
+          label="Total Patients"
+          value={patients.length}
+          color="#3b82f6"
+        />
+        <StatBox
+          label="Emergencies"
+          value={patients.filter((p) => p.urgency === 5).length}
+          color="#ef4444"
+        />
+        <StatBox
+          label="Waiting > 30m"
+          value={patients.filter((p) => p.waitingMins > 30).length}
+          color="#f97316"
+        />
       </div>
 
       <div className="filterRow">
@@ -220,32 +197,22 @@ const StaffDashboard = () => {
           <PatientCard key={patient.id} patient={patient} />
         ))}
       </div>
-
     </div>
   );
 };
 
 const PatientCard = ({ patient }) => {
-
   const urgency = getUrgencyInfo(patient.urgency);
 
   return (
-    <div
-      className="card"
-      style={{ borderLeft: `4px solid ${urgency.color}` }}
-    >
-
+    <div className="card" style={{ borderLeft: `4px solid ${urgency.color}` }}>
       <div className="cardLeft">
         <p className="patientName">
-          Patient #{patient.id} · {patient.age} yrs · {patient.gender}
+          Patient #{patient._id} · {patient.age} yrs · {patient.gender}
         </p>
-
-        <p className="symptomsText">
-          {patient.symptoms.join(" · ")}
-        </p>
-
+        <p className="symptomsText">{patient.symptoms.join(" · ")}</p>
         <p className="waitText">
-          ⏱ Waiting {patient.waitingMins} minutes
+          ⏱ Submitted {new Date(patient.createdAt).toLocaleTimeString()}
         </p>
       </div>
 
@@ -255,7 +222,6 @@ const PatientCard = ({ patient }) => {
       >
         {urgency.label}
       </div>
-
     </div>
   );
 };
@@ -263,7 +229,9 @@ const PatientCard = ({ patient }) => {
 const StatBox = ({ label, value, color }) => {
   return (
     <div className="statBox">
-      <p className="statNumber" style={{ color }}>{value}</p>
+      <p className="statNumber" style={{ color }}>
+        {value}
+      </p>
       <p className="statLabel">{label}</p>
     </div>
   );
