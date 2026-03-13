@@ -52,10 +52,10 @@ router.patch("/:id", authenticateToken, async (req, res) => {
     const { status } = req.body;
 
     const patient = await Patient.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true }
-    );
+  id,
+  { status },
+  { returnDocument: "after" }
+);
 
     res.json(patient);
   } catch (error) {

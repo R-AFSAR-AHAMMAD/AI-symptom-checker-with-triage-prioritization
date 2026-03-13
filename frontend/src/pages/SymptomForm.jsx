@@ -68,7 +68,7 @@ const SymptomForm = () => {
           font-family: 'DM Sans', sans-serif;
           min-height: 100vh;
         }
-
+        
         .wrapper {
           min-height: 100vh;
           display: flex;
@@ -300,6 +300,24 @@ const SymptomForm = () => {
           margin-top: 1rem;
           line-height: 1.5;
         }
+
+        @media (max-width: 480px) {
+  .card {
+    padding: 1.5rem;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+  }
+
+  .symptom-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .btn-primary {
+    font-size: 0.9rem;
+  }
+}
       `}</style>
 
       <div className="wrapper">
