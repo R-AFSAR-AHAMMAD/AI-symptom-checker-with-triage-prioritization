@@ -35,12 +35,26 @@ const StaffDashboard = () => {
         setLoading(false);
       });
   }, []);
-  const sorted = patients;
 
-  const visible =
-    filter === "all"
-      ? sorted
-      : sorted.filter((p) => p.urgency === Number(filter));
+  const handleTreat = async (id) => {
+     console.log("Treating patient:", id) 
+    const token = localStorage.getItem("jwtToken");
+
+    await axios.patch(
+      `http://localhost:5000/api/patients/${id}`,
+      { status: "resolved" },
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+
+    // update status locally without refetching
+    setPatients((prev) =>
+      prev.map((p) => (p._id === id ? { ...p, status: "resolved" } : p)),
+    );
+  };
+
+  const waitingPatients = patients.filter((p) => p.status === "waiting");
+  const treatedPatients = patients.filter((p) => p.status === "resolved");
+
   if (loading) {
     return (
       <div
@@ -64,7 +78,7 @@ const StaffDashboard = () => {
               margin: "0 auto",
             }}
           />
-          <p style={{ marginTop: "1rem", color: "#64748b", fontWeight: 600}}>
+          <p style={{ marginTop: "1rem", color: "#64748b", fontWeight: 600 }}>
             Loading patients...
           </p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -72,6 +86,7 @@ const StaffDashboard = () => {
       </div>
     );
   }
+
   return (
     <div className="page">
       {/* Styles added here */}
@@ -200,22 +215,36 @@ const StaffDashboard = () => {
       `}</style>
 
       <div className="topBar">
-  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-    <div>
-      <h1 className="title">🏥 Triage Dashboard</h1>
-      <p className="subtitle">Patients sorted by severity</p>
-    </div>
-    <button
-      onClick={() => {
-        localStorage.removeItem("jwtToken");
-        window.location.href = "/login";
-      }}
-      style={{ padding: "0.5rem 1.2rem", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
-    >
-      Logout
-    </button>
-  </div>
-</div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div>
+            <h1 className="title">🏥 Triage Dashboard</h1>
+            <p className="subtitle">Patients sorted by severity</p>
+          </div>
+          <button
+            onClick={() => {
+              localStorage.removeItem("jwtToken");
+              window.location.href = "/login";
+            }}
+            style={{
+              padding: "0.5rem 1.2rem",
+              background: "#ef4444",
+              color: "white",
+              border: "none",
+              borderRadius: "8px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Logout
+          </button>
+        </div>
+      </div>
 
       <div className="statsRow">
         <StatBox
@@ -248,15 +277,47 @@ const StaffDashboard = () => {
       </div>
 
       <div className="cardList">
-        {visible.map((patient) => (
-          <PatientCard key={patient.id} patient={patient} />
+        <p
+          className="subtitle"
+          style={{ fontWeight: 700, color: "#0f172a", marginBottom: "0.5rem" }}
+        >
+          ⏳ Waiting
+        </p>
+        {waitingPatients.map((patient) => (
+          <PatientCard
+            key={patient._id}
+            patient={patient}
+            onTreat={handleTreat}
+          />
         ))}
+
+        {treatedPatients.length > 0 && (
+          <>
+            <p
+              className="subtitle"
+              style={{
+                fontWeight: 700,
+                color: "#22c55e",
+                margin: "1rem 0 0.5rem",
+              }}
+            >
+              ✅ Treated
+            </p>
+            {treatedPatients.map((patient) => (
+              <PatientCard
+                key={patient._id}
+                patient={patient}
+                onTreat={handleTreat}
+              />
+            ))}
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-const PatientCard = ({ patient }) => {
+const PatientCard = ({ patient, onTreat }) => {
   const urgency = getUrgencyInfo(patient.urgency);
 
   return (
@@ -271,11 +332,22 @@ const PatientCard = ({ patient }) => {
         </p>
       </div>
 
-      <div
-        className="badge"
-        style={{ background: urgency.bg, color: urgency.color }}
-      >
-        {urgency.label}
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <div
+          className="badge"
+          style={{ background: urgency.bg, color: urgency.color }}
+        >
+          {urgency.label}
+        </div>
+
+        {patient.status !== "resolved" && (
+          <button
+            onClick={() => onTreat(patient._id)}
+            style={{ marginLeft: "1rem", padding: "0.4rem 1rem", background: "#22c55e", color: "white", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer", fontSize: "0.85rem" }}
+          >
+            ✓ Treat
+          </button>
+        )}
       </div>
     </div>
   );

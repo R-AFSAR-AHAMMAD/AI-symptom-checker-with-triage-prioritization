@@ -20,41 +20,40 @@ const SYMPTOMS = [
   { icon: "👁️", label: "Blurred Vision" },
 ];
 
-const SymptomForm = ()=> {
+const SymptomForm = () => {
   const [step, setStep] = useState(1);
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("");
   const [selected, setSelected] = useState([]);
-  const [submitted, setSubmitted] = useState(false);
 
   const toggleSymptom = (label) => {
     setSelected((prev) =>
-      prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label]
+      prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label],
     );
   };
 
-const handleSubmit = async () => {
-  try {
-    // send patient data to our backend
-    await axios.post("http://localhost:5000/api/patients", {
-      age: age,
-      gender: gender,
-      symptoms: selected,
-    });
+  const [aiResult, setAiResult] = useState(null);
 
-    setStep(3);
-  } catch (error) {
-    console.log("Error:", error.response?.data)
-    console.log("Error saving patient:", error.message);
-  }
-};
+  const handleSubmit = async () => {
+    try {
+      const response = await axios.post("http://localhost:5000/api/patients", {
+        age: age,
+        gender: gender,
+        symptoms: selected,
+      });
+
+      setAiResult(response.data); // ← save AI result
+      setStep(3);
+    } catch (error) {
+      console.log("Error:", error.response?.data);
+    }
+  };
 
   const reset = () => {
     setStep(1);
     setAge("");
     setGender("");
     setSelected([]);
-    setSubmitted(false);
   };
 
   return (
@@ -305,11 +304,14 @@ const handleSubmit = async () => {
 
       <div className="wrapper">
         <div className="card">
-
           {/* Progress dots */}
           <div className="progress">
-            <div className={`progress-dot ${step >= 1 ? (step > 1 ? "done" : "active") : ""}`} />
-            <div className={`progress-dot ${step >= 2 ? (step > 2 ? "done" : "active") : ""}`} />
+            <div
+              className={`progress-dot ${step >= 1 ? (step > 1 ? "done" : "active") : ""}`}
+            />
+            <div
+              className={`progress-dot ${step >= 2 ? (step > 2 ? "done" : "active") : ""}`}
+            />
             <div className={`progress-dot ${step >= 3 ? "active" : ""}`} />
           </div>
 
@@ -317,20 +319,26 @@ const handleSubmit = async () => {
           {step === 1 && (
             <>
               <div className="header-tag">🏥 Triage Check</div>
-              <h1>Tell us about <span>yourself</span></h1>
+              <h1>
+                Tell us about <span>yourself</span>
+              </h1>
               <p className="subtitle">Takes less than 2 minutes</p>
 
               <label>Your Age</label>
               <input
                 type="number"
                 placeholder="e.g. 28"
-                min="1" max="120"
+                min="1"
+                max="120"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
               />
 
               <label>Biological Sex</label>
-              <select value={gender} onChange={(e) => setGender(e.target.value)}>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+              >
                 <option value="">Select...</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -351,7 +359,9 @@ const handleSubmit = async () => {
           {step === 2 && (
             <>
               <div className="header-tag">🩺 Symptoms</div>
-              <h1>What are you <span>feeling?</span></h1>
+              <h1>
+                What are you <span>feeling?</span>
+              </h1>
               <p className="subtitle">Tap everything that applies right now</p>
 
               <div className="symptom-grid">
@@ -363,7 +373,9 @@ const handleSubmit = async () => {
                   >
                     <span className="icon">{icon}</span>
                     {label}
-                    {selected.includes(label) && <span className="counter">✓</span>}
+                    {selected.includes(label) && (
+                      <span className="counter">✓</span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -373,10 +385,16 @@ const handleSubmit = async () => {
                 disabled={selected.length === 0}
                 onClick={handleSubmit}
               >
-                Analyze {selected.length > 0 ? `(${selected.length} symptoms)` : "Symptoms"} →
+                Analyze{" "}
+                {selected.length > 0
+                  ? `(${selected.length} symptoms)`
+                  : "Symptoms"}{" "}
+                →
               </button>
 
-              <button className="btn-transp" onClick={() => setStep(1)}>← Back</button>
+              <button className="btn-transp" onClick={() => setStep(1)}>
+                ← Back
+              </button>
             </>
           )}
 
@@ -384,8 +402,13 @@ const handleSubmit = async () => {
           {step === 3 && (
             <>
               <div className="header-tag">✅ Submitted</div>
-              <h1>Got it, <span>thank you</span></h1>
-              <p className="subtitle">Age {age} · {gender} · {selected.length} symptom{selected.length !== 1 ? "s" : ""} reported</p>
+              <h1>
+                Got it, <span>thank you</span>
+              </h1>
+              <p className="subtitle">
+                Age {age} · {gender} · {selected.length} symptom
+                {selected.length !== 1 ? "s" : ""} reported
+              </p>
 
               <div className="result-list">
                 {selected.map((s) => (
@@ -395,22 +418,79 @@ const handleSubmit = async () => {
                   </div>
                 ))}
               </div>
+              {aiResult && (
+                <div
+                  style={{
+                    margin: "1rem 0",
+                    padding: "1rem",
+                    background: "#1f2937",
+                    borderRadius: "12px",
+                  }}
+                >
+                  <p
+                    style={{
+                      color: "#9ca3af",
+                      fontSize: "0.8rem",
+                      marginBottom: "0.4rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    AI Urgency
+                  </p>
+                  <p
+                    style={{
+                      color: "#38bdf8",
+                      fontWeight: 700,
+                      fontSize: "1.1rem",
+                      marginBottom: "0.75rem",
+                    }}
+                  >
+                    Level {aiResult.urgency} —{" "}
+                    {
+                      ["", "Routine", "Low", "Moderate", "Urgent", "Emergency"][
+                        aiResult.urgency
+                      ]
+                    }
+                  </p>
+                  <p
+                    style={{
+                      color: "#9ca3af",
+                      fontSize: "0.8rem",
+                      marginBottom: "0.4rem",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}
+                  >
+                    Reason
+                  </p>
+                  <p
+                    style={{
+                      color: "#e5e7eb",
+                      fontSize: "0.9rem",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {aiResult.aiReason}
+                  </p>
+                </div>
+              )}
 
               <button className="btn-primary" onClick={reset}>
                 Start Over
               </button>
 
               <p className="note">
-                ⚠️ This is not a medical diagnosis.<br />
+                ⚠️ This is not a medical diagnosis.
+                <br />
                 Always consult a qualified healthcare professional.
               </p>
             </>
           )}
-
         </div>
       </div>
     </>
   );
-}
+};
 
-export default SymptomForm
+export default SymptomForm;
