@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -8,18 +9,26 @@ const Login = () => {
 
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      setError("Please fill in both fields");
-      return;
-    }
+const handleLogin = async () => {
+  if (!email || !password) {
+    setError("Please fill in both fields");
+    return;
+  }
 
-    if (email === "staff@clinic.com" && password === "1234") {
-      navigate("/staff");
-    } else {
-      setError("Wrong email or password");
-    }
-  };
+  try {
+    const response = await axios.post("http://localhost:5000/api/auth/login", {
+      email,
+      password,
+    });
+
+    // save token to localStorage
+    localStorage.setItem("jwtToken", response.data.jwtToken);
+
+    navigate("/staff");
+  } catch (error) {
+    setError(error.response?.data?.message || "Login failed");
+  }
+};
 
   return (
     <div className="loginPage">
@@ -82,6 +91,7 @@ const Login = () => {
         border:1.5px solid #e5e7eb;
         border-radius:10px;
         font-size:0.95rem;
+        opacity:0.5;
         outline:none;
         box-sizing:border-box;
       }
@@ -136,7 +146,7 @@ const Login = () => {
         <label className="inputLabel">Email</label>
         <input
           type="email"
-          placeholder="staff@clinic.com"
+          placeholder="staff@triagecare.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="inputField"

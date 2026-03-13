@@ -15,21 +15,63 @@ const getUrgencyInfo = (level) => {
 const StaffDashboard = () => {
   const [filter, setFilter] = useState("all");
   const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/patients")
-      .then((res) => setPatients(res.data))
-      .catch((err) => console.log(err));
-  }, []);
+    const token = localStorage.getItem("jwtToken");
 
+    axios
+      .get("http://localhost:5000/api/patients", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setPatients(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+      });
+  }, []);
   const sorted = patients;
 
   const visible =
     filter === "all"
       ? sorted
       : sorted.filter((p) => p.urgency === Number(filter));
-
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#f1f5f9",
+        }}
+      >
+        <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              width: "40px",
+              height: "40px",
+              border: "4px solid #e2e8f0",
+              borderTop: "4px solid #1e40af",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+              margin: "0 auto",
+            }}
+          />
+          <p style={{ marginTop: "1rem", color: "#64748b", fontWeight: 600}}>
+            Loading patients...
+          </p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="page">
       {/* Styles added here */}
@@ -158,9 +200,22 @@ const StaffDashboard = () => {
       `}</style>
 
       <div className="topBar">
-        <h1 className="title">🏥 Triage Dashboard</h1>
-        <p className="subtitle">Patients sorted by severity</p>
-      </div>
+  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+    <div>
+      <h1 className="title">🏥 Triage Dashboard</h1>
+      <p className="subtitle">Patients sorted by severity</p>
+    </div>
+    <button
+      onClick={() => {
+        localStorage.removeItem("jwtToken");
+        window.location.href = "/login";
+      }}
+      style={{ padding: "0.5rem 1.2rem", background: "#ef4444", color: "white", border: "none", borderRadius: "8px", fontWeight: 700, cursor: "pointer" }}
+    >
+      Logout
+    </button>
+  </div>
+</div>
 
       <div className="statsRow">
         <StatBox
